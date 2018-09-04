@@ -836,7 +836,7 @@ browser."
         link placeholder text href)
     (dotimes (i (length links))
       (setq link (aref links i))
-      (setq text (cdr (assoc 'text link)))
+      (setq text (replace-regexp-in-string "</?code>" "" (cdr (assoc 'text link))))
       (setq href (cdr (assoc 'href link)))
       (setq placeholder (format "|%s[%s]|" text i))
       (goto-char (point-min))
