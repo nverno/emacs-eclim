@@ -31,9 +31,13 @@
 ;;; Code:
 
 (require 'eclim-common)
-(require 'cl-lib)
-(require 'dash)
-(eval-when-compile (require 'eclim-macros))
+;; (require 'dash)
+(eval-when-compile
+  (require 'eclim-macros)
+  (require 'cl-lib))
+
+(define-obsolete-function-alias 'start-eclimd 'eclimd-start "27")
+(define-obsolete-function-alias 'stop-eclimd 'eclimd-stop "27")
 
 (defgroup eclimd nil
   "eclimd customizations"
@@ -45,7 +49,7 @@
   "The eclimd executable to use.
 Set to nil to auto-discover from `eclim-executable' value
 \(the default).  Set to \"eclimd\" if eclim and eclimd are
-in `exec-path'.  Otherwise, set to the full path of the
+in function `exec-path'.  Otherwise, set to the full path of the
 eclimd executable."
   :type '(choice (const :tag "Same directory as eclim-executable variable" nil)
                  (string :tag "Custom value" "eclimd"))
@@ -53,14 +57,14 @@ eclimd executable."
 
 (defcustom eclimd-default-workspace
   "~/workspace"
-  "The default value to use when `start-eclimd' asks for a workspace."
+  "The default value to use when `eclimd-start' asks for a workspace."
   :type 'directory
   :group 'eclimd)
 
 (defcustom eclimd-wait-for-process
   nil
-  "Non-nil means `start-eclimd' blocks until eclimd is ready.
-When this variable is nil, `start-eclimd' returns
+  "Non-nil means `eclimd-start' blocks until eclimd is ready.
+When this variable is nil, `eclimd-start' returns
 immediately after the eclimd process is started.  Since the
 eclimd process startup takes a few seconds, running eclim
 commands immediately after the function returns may cause
@@ -110,7 +114,7 @@ on which eclimd is serving.")
 When `eclimd-autostart' is non-nil, this option controls
 whether eclimd is started silently with the workspace set to
 `eclimd-default-workspace', or whether the user is asked for
-a workspace as with regular calls to `start-eclimd'."
+a workspace as with regular calls to `eclimd-start'."
   :tag "Autostart eclimd with default workspace"
   :type 'boolean
   :group 'eclimd)
@@ -128,11 +132,10 @@ user is asked to provide the workspace.  Otherwise,
   nil
   "Non-nil means automatically start eclimd within Emacs when needed.
 You may want to set this to nil if you prefer starting
-eclimd manually and don't want it to run as a child
-process of Emacs.  When set, eclimd gets started either when
-`eclim-mode' is enabled or the first time
-`global-eclim-mode' needs it to determine if `eclim-mode'
-should be enabled in a buffer.  See also
+eclimd manually and don't want it to run as a child process of Emacs.
+When set, eclimd gets started either when command `eclim-mode' is enabled
+for the first time function `global-eclim-mode' needs it to determine if
+command `eclim-mode' should be enabled in a buffer.  See also
 `eclimd-autostart-with-default-workspace'."
   :tag "Autostart eclimd"
   :type 'boolean
@@ -234,7 +237,7 @@ start."
        (when callback (funcall callback))))))
 
 ;;;###autoload
-(defun start-eclimd (workspace-dir &optional callback)
+(defun eclimd-start (workspace-dir &optional callback)
   "Start the eclimd server and optionally wait for it to be ready.
 
 WORKSPACE-DIR is the desired workspace directory for which
@@ -249,7 +252,7 @@ block until eclimd is ready to receive commands, depending
 on the value of `eclimd-wait-for-process'.  Commands will
 fail if they are executed before the server is ready.
 
-To stop the server, you should use `stop-eclimd'."
+To stop the server, you should use `eclimd-start'."
   (interactive (list (eclimd--read-workspace-dir)))
   (let ((eclimd-prog (eclimd--executable-path)))
     (if (not eclimd-prog)
@@ -264,12 +267,13 @@ To stop the server, you should use `stop-eclimd'."
                            eclimd-prog
                            nil
                            (concat "-Dosgi.instance.area.default="
-                                   (replace-regexp-in-string "~" "@user.home" workspace-dir))))
+                                   (replace-regexp-in-string "~" "@user.home"
+                                                             workspace-dir))))
         (setq eclimd-process (get-buffer-process eclimd-process-buffer))
         (setq eclimd--comint-process-filter (process-filter eclimd-process))
         (set-process-filter eclimd-process 'eclimd--process-filter)
         (set-process-sentinel eclimd-process 'eclimd--process-sentinel)
-        (add-hook 'kill-emacs-hook #'stop-eclimd)
+        (add-hook 'kill-emacs-hook #'eclimd-start)
         ;; The flag is required because on exit Emacs asks the user about
         ;; running processes before running the `kill-emacs-hook'.
         (set-process-query-on-exit-flag eclimd-process nil)
@@ -303,14 +307,15 @@ not be started / is already running, CALLBACK is not executed."
         (eclimd--await-connection async callback)
       (if eclimd-autostart
           (let ((eclimd-wait-for-process (not async)))
-            (start-eclimd (eclimd--autostart-workspace) callback))
-        (let ((msg "Autostarting of eclimd is disabled, please start eclimd manually."))
+            (eclimd-start (eclimd--autostart-workspace) callback))
+        (let ((msg "Autostarting of eclimd is disabled, please start eclimd \
+manually."))
           (if async (message msg) (error "%s" msg)))))))
 
-(defun stop-eclimd ()
+(defun eclimd-stop ()
   "Gracefully terminate the eclimd process.
 Also kill the *eclimd*-buffer and remove any hooks added by
-`start-eclimd'."
+`eclimd-start'."
   (interactive)
   (when eclimd-process
     (when (eclim--connected-p)
@@ -321,7 +326,7 @@ Also kill the *eclimd*-buffer and remove any hooks added by
   (when eclimd-process-buffer
     (kill-buffer eclimd-process-buffer)
     (setq eclimd-process-buffer nil))
-  (remove-hook 'kill-emacs-hook #'stop-eclimd))
+  (remove-hook 'kill-emacs-hook #'eclimd-start))
 
 (provide 'eclimd)
 ;;; eclimd ends here
