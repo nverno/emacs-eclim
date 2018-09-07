@@ -814,15 +814,46 @@ browser."
             (use-local-map eclim-java-show-documentation-map)
 
             (eclim--java-show-documentation-and-format doc)
-
-            (message (substitute-command-keys
-                      (concat
-                       "\\[forward-button] - move to next link, "
-                       "\\[backward-button] - move to previous link, "
-                       "\\[eclim-quit-window] - quit")))))
+            ;; return the docstring
+            (prog1 (buffer-string)
+              (message (substitute-command-keys
+                        (concat
+                         "\\[forward-button] - move to next link, "
+                         "\\[backward-button] - move to previous link, "
+                         "\\[eclim-quit-window] - quit"))))))
 
       (message "No element found at point."))))
 
+;; insert prettified doc string: fills long lines, but tries to maintain proper
+;; paragraph separation using `use-hard-newlines' and add text properties to the
+;; resulting docs
+(defun eclim--java-insert-documentation-formatted (doc)
+  (insert (cdr (assoc 'text doc)))
+  (let ((use-hard-newlines t)
+        (nlnl "\n\n")
+        (nl "\n")
+        (pos (progn (goto-char (point-min)) (forward-line 2) (point)))
+        in-block)
+    (put-text-property 0 1 'hard t nl)
+    (put-text-property 0 1 'hard t nlnl)
+    (while (re-search-forward
+            "\\(\\([:[alpha]:]+\\)? *\\([:\n\t]\\)+\\)" nil 'move)
+      (cond
+       ((string-match-p (match-string 3) ":")
+        (if (not (string-match-p (match-string 3) "\n"))
+            (replace-match (concat nl (concat (match-string 2) ":") nl))
+          (setq in-block t)
+          (replace-match (concat ":" nlnl)) ;start of block
+          (add-text-properties (1- (point)) (point) '(start-block t))))
+       ((and in-block (looking-at-p "\\s-*$")) ;end of block
+        (setq in-block nil)
+        (replace-match nl)
+        (add-text-properties (1- (point)) (point) '(end-block t))
+        (forward-line))
+       ((memq (char-after (point-at-bol)) '(? ?	))
+        (replace-match nl))              ;inside code / output block
+       (t (replace-match nlnl))))
+    (fill-region pos (point-max) nil 'nosqueeze)))
 
 (defun eclim--java-show-documentation-and-format (doc &optional add-to-history)
   (make-local-variable 'eclim-java-show-documentation-history)
@@ -832,7 +863,7 @@ browser."
                   eclim-java-show-documentation-history)))
 
   (erase-buffer)
-  (insert (cdr (assoc 'text doc)))
+  (eclim--java-insert-documentation-formatted doc)
 
   (let ((links (cdr (assoc 'links doc)))
         link placeholder text href)
