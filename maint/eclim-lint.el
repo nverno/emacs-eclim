@@ -26,6 +26,14 @@
 
 (require 'f)
 
+(eval-when-compile
+  (defvar checkdoc-force-docstrings-flag)
+  (defvar checkdoc-arguments-in-order-flag) ;default changed 26.1
+  (defvar checkdoc-verb-check-experimental-flag)
+  (defvar elisp-lint-ignored-validators))
+(declare-function elisp-lint-files-batch "elisp-lint")
+(declare-function flycheck-package-setup "flycheck-package")
+
 (defvar eclim-test-path
   (f-dirname (f-this-file)))
 
@@ -39,7 +47,8 @@
   "Initialize Emacs with Cask packages an invoke ACTION."
   (let* ((load-prefer-newer t)
          (source-directory (locate-dominating-file eclim-test-path "Cask"))
-         (pkg-rel-dir (format ".cask/%s.%S/elpa" emacs-major-version emacs-minor-version)))
+         (pkg-rel-dir
+          (format ".cask/%s.%S/elpa" emacs-major-version emacs-minor-version)))
 
     (setq package-user-dir (expand-file-name pkg-rel-dir source-directory))
     (package-initialize)
@@ -61,12 +70,16 @@
      (add-hook 'emacs-lisp-mode-hook
                (lambda ()
                  (setq indent-tabs-mode nil)
-                 (setq fill-column 80)))
+                 (setq fill-column 80)
+                 (setq checkdoc-force-docstrings-flag nil
+                       checkdoc-arguments-in-order-flag nil ;default changed 26.1
+                       checkdoc-verb-check-experimental-flag nil)))
      (let ((debug-on-error t))
        (elisp-lint-files-batch)))))
 
 (defun eclim-package-lint ()
-  "Checks that the metadata in Emacs Lisp files which to ensure they are intended to be packages."
+  "Checks that the metadata in Emacs Lisp files which to ensure they are
+intended to be packages."
   (eclim-emacs-init
    (lambda ()
      (eval-after-load 'flycheck

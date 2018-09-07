@@ -23,8 +23,6 @@
 ;;  - Alessandro Arzilli <alessandro.arzilli * gmail com>
 ;;
 ;;; Commentary:
-;;
-;;
 ;;; Code:
 
 (require 'popup)
@@ -251,7 +249,8 @@ If the problems buffer does not exist yet, it is created."
   (interactive)
   (if (eclim-project-name)
       (eclim--problems-mode-init)
-    (error "Could not figure out the current project. Is this an eclim managed buffer?")))
+    (error "Could not figure out the current project.  \
+Is this an eclim managed buffer?")))
 
 (defun eclim-problems-open ()
   "Switch to the problems buffer in a new Emacs window.
