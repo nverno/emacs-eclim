@@ -536,16 +536,18 @@ sorts import statements. "
 
 
 (defun eclim-java-new (project type name-with-package)
-  "Creates a new class"
-  (interactive (list (eclim-project-name)
+  "Creates a new class. If project is nil, creates in current directory."
+  (interactive (list (and (not (y-or-n-p "Create in current directory?"))
+                          (eclim-project-name))
                      (eclim--completing-read "Type: " eclim--java-new-types)
                      (read-string "Name: " (eclim--java-current-package))))
   (let ((root-dir (eclim--completing-read "Root: " (eclim/java-src-dirs project))))
     (when eclim-print-debug-messages
-      (message "eclim-java-new: project: %s, type: %s, file: %s" project type name-with-package))
-    (eclim/with-results new-file ("java_new" ("-p" project) ("-t" type) ("-n" name-with-package) ("-r" root-dir))
-      (eclim--find-file new-file)
-    )))
+      (message "eclim-java-new: project: %s, type: %s, file: %s" project type
+               name-with-package))
+    (eclim/with-results new-file ("java_new" ("-p" project) ("-t" type)
+                                  ("-n" name-with-package) ("-r" root-dir))
+      (eclim--find-file new-file))))
 
 (defun eclim--signature-has-keyword (sig java-keyword)
   "Returns true if a method signature SIG has the keyword JAVA-KEYWORD."
