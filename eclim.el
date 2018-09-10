@@ -40,8 +40,8 @@
 (require 'cl-lib)
 (require 's)
 (require 'json)
-(require 'eclimd)
 (require 'eclim-common)
+(require 'eclimd)
 (eval-when-compile (require 'eclim-macros))
 
 ;;** Basics
