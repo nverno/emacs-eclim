@@ -43,8 +43,9 @@
 (require 'dash)
 (require 's)
 
-(define-key eclim-mode-map (kbd "C-c C-e p t") 'eclim-debug-test)
-(define-key eclim-mode-map (kbd "C-c C-e p a") 'eclim-debug-attach)
+(eclim-bind-keys eclim-debug-keymap "p"
+  ("t" . eclim-debug-test)
+  ("a" . eclim-debug-attach))
 
 (defun eclim--debug-jdb-run-command (project main-class args)
   (let ((config `((name . ,(concat "*Debug - " main-class "*"))

@@ -31,14 +31,15 @@
 ;; eclim-java-run.el -- java run configurations for eclim
 ;;
 ;;; Code:
-
+(require 'eclim-common)
 (require' eclim-project)
 (require 'eclim-java)
 (require 's)
 (require 'dash)
 (require 'xml)
 
-(define-key eclim-mode-map (kbd "C-c C-e u r") 'eclim-java-run-run)
+(eclim-bind-keys java-run-keymap "u"
+  ("r" . eclim-java-run-run))
 
 (defun eclim-java-run-sourcepath (project)
   (let ((projects (-snoc (eclim-project-dependencies project) project)))

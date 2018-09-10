@@ -62,8 +62,9 @@
         map)
   "The local key map to use in `eclim-problems-mode'.")
 
-(define-key eclim-mode-map (kbd "C-c C-e b") 'eclim-problems)
-(define-key eclim-mode-map (kbd "C-c C-e o") 'eclim-problems-open)
+(eclim-bind-keys nil nil
+  ("b" . eclim-problems)
+  ("o" . eclim-problems-open))
 
 (defconst eclim--problems-buffer-name "*eclim: problems*"
   "The name to use for the problems buffer.")
