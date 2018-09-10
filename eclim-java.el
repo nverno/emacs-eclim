@@ -38,20 +38,21 @@
 (require 'eclim-problems)
 (eval-when-compile (require 'eclim-macros))
 
-(define-key eclim-mode-map (kbd "C-c C-e d")   'eclim-java-doc-comment)
-(define-key eclim-mode-map (kbd "C-c C-e f d") 'eclim-java-find-declaration)
-(define-key eclim-mode-map (kbd "C-c C-e f f") 'eclim-java-find-generic)
-(define-key eclim-mode-map (kbd "C-c C-e f r") 'eclim-java-find-references)
-(define-key eclim-mode-map (kbd "C-c C-e f s") 'eclim-java-format)
-(define-key eclim-mode-map (kbd "C-c C-e f t") 'eclim-java-find-type)
-(define-key eclim-mode-map (kbd "C-c C-e g")   'eclim-java-generate-getter-and-setter)
-(define-key eclim-mode-map (kbd "C-c C-e h")   'eclim-java-hierarchy)
-(define-key eclim-mode-map (kbd "C-c C-e i")   'eclim-java-import-organize)
-(define-key eclim-mode-map (kbd "C-c C-e n")   'eclim-java-new)
-(define-key eclim-mode-map (kbd "C-c C-e r")   'eclim-java-refactor-rename-symbol-at-point)
-(define-key eclim-mode-map (kbd "C-c C-e s")   'eclim-java-method-signature-at-point)
-(define-key eclim-mode-map (kbd "C-c C-e t")   'eclim-run-junit)
-(define-key eclim-mode-map (kbd "C-c C-e z")   'eclim-java-implement)
+(eclim-bind-keys nil nil
+  ("d" . eclim-java-doc-comment)
+  ("f d" . eclim-java-find-declaration)
+  ("f f" . eclim-java-find-generic)
+  ("f r" . eclim-java-find-references)
+  ("f s" . eclim-java-format)
+  ("f t" . eclim-java-find-type)
+  ("g"   . eclim-java-generate-getter-and-setter)
+  ("h"   . eclim-java-hierarchy)
+  ("i"  . eclim-java-import-organize)
+  ("n" . eclim-java-new)
+  ("r" . eclim-java-refactor-rename-symbol-at-point)
+  ("s" . eclim-java-method-signature-at-point)
+  ("t" . eclim-run-junit)
+  ("z" . eclim-java-implement))
 
 (defvar eclim-java-show-documentation-map
   (let ((map (make-keymap)))
@@ -60,7 +61,6 @@
     (define-key map (kbd "S-<tab>") 'backward-button)
     (define-key map (kbd "q") 'eclim-quit-window)
     map))
-
 
 (defgroup eclim-java nil
   "Java: editing, browsing, refactoring"

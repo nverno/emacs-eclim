@@ -63,15 +63,17 @@
 (defvar eclim-project-info-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map special-mode-map)
-        map))
+    map))
 
+(eclim-bind-keys nil nil
+  ("g" . eclim-project-goto))
 
-(define-key eclim-mode-map (kbd "C-c C-e g") 'eclim-project-goto)
-(define-key eclim-mode-map (kbd "C-c C-e p p") 'eclim-project-mode)
-(define-key eclim-mode-map (kbd "C-c C-e p m") 'eclim-project-mode)
-(define-key eclim-mode-map (kbd "C-c C-e p i") 'eclim-project-import)
-(define-key eclim-mode-map (kbd "C-c C-e p c") 'eclim-project-create)
-(define-key eclim-mode-map (kbd "C-c C-e p g") 'eclim-project-goto)
+(eclim-bind-keys eclim-project-keymap "p"
+  ("p" . eclim-project-goto)
+  ("m" . eclim-project-mode)
+  ("i" . eclim-project-import)
+  ("c" . eclim-project-create)
+  ("g" . eclim-project-goto))
 
 (defun eclim--project-clear-cache ()
   (setq eclim--project-natures-cache nil)

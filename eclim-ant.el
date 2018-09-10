@@ -34,24 +34,11 @@
   "Build java projects using Apache Ant"
   :group 'eclim)
 
-(defcustom eclim-ant-keymap-prefix "a"
-  "Eclim ant keymap prefix."
-  :type 'string
-  :group 'eclim)
-
-(defvar eclim-ant-keymap
-  (let (eclim-ant-keymap)
-    (define-prefix-command 'eclim-ant-keymap)
-    (define-key eclim-ant-keymap "c" 'eclim-ant-clear-cache)
-    (define-key eclim-ant-keymap "r" 'eclim-ant-run)
-    (define-key eclim-ant-keymap "a" 'eclim-ant-run)
-    (define-key eclim-ant-keymap "v" 'eclim-ant-validate)))
-(define-key 'eclim-command-map "a" 'eclim-ant-keymap)
-
-;; (define-key eclim-mode-map (kbd "C-c C-e a c") 'eclim-ant-clear-cache)
-;; (define-key eclim-mode-map (kbd "C-c C-e a r") 'eclim-ant-run)
-;; (define-key eclim-mode-map (kbd "C-c C-e a a") 'eclim-ant-run)
-;; (define-key eclim-mode-map (kbd "C-c C-e a v") 'eclim-ant-validate)
+(eclim-bind-keys eclim-ant-keymap "a"
+  ("c" . eclim-ant-clear-cache)
+  ("r" . eclim-ant-run)
+  ("a" . eclim-ant-run)
+  ("v" . eclim-ant-validate))
 
 (defcustom eclim-ant-directory ""
   "This variable contains the location, where the main buildfile is

@@ -37,8 +37,9 @@
                '("\\[ERROR]\\ \\(\/.*\\):\\[\\([0-9]*\\),\\([0-9]*\\)]" 1 2 3))
               compilation-error-regexp-alist))
 
-(define-key eclim-mode-map (kbd "C-c C-e m p") 'eclim-maven-lifecycle-phase-run)
-(define-key eclim-mode-map (kbd "C-c C-e m r") 'eclim-maven-run)
+(eclim-bind-keys eclim-maven-keymap "m"
+  ("p" . eclim-maven-lifecycle-phase-run)
+  ("r" . eclim-maven-run))
 
 (defvar eclim-maven-lifecycle-phases
   '("validate" "compile" "test" "package" "integration" "verify" "install" "deploy"))
