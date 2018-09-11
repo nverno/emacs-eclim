@@ -45,8 +45,6 @@
   (require 'eclim-macros)
   (require 'cl-lib))
 
-;;** Basics
-
 (defgroup eclim nil
   "Interface to the Eclipse IDE."
   :group 'tools)

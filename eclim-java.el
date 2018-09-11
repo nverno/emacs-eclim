@@ -29,17 +29,14 @@
 ;;
 ;;; Code:
 
-;;* Eclim Java
-
 (require 'json)
-(require 'dash)
 (require 'cl-lib)
 (require 'format-spec)
 (require 'eclim-common)
 (require 'eclim-problems)
 (eval-when-compile (require 'eclim-macros))
 
-(eclim-bind-keys nil nil
+(eclim-bind-keys nil nil nil
   ("d"   . eclim-java-doc-comment)
   ("f d" . eclim-java-find-declaration)
   ("f f" . eclim-java-find-generic)
@@ -51,6 +48,7 @@
   ("i"   . eclim-java-import-organize)
   ("n"   . eclim-java-new)
   ("r"   . eclim-java-refactor-rename-symbol-at-point)
+  ;; not defined anywhere
   ;; ("s"   . eclim-java-method-signature-at-point)
   ("t"   . eclim-run-junit)
   ("z"   . eclim-java-implement))

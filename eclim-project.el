@@ -65,7 +65,7 @@
     (set-keymap-parent map special-mode-map)
     map))
 
-(eclim-bind-keys nil nil
+(eclim-bind-keys nil nil nil
   ("g" . eclim-project-goto))
 
 (eclim-bind-keys eclim-project-keymap "p"

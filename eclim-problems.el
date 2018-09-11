@@ -62,7 +62,7 @@
         map)
   "The local key map to use in `eclim-problems-mode'.")
 
-(eclim-bind-keys nil nil
+(eclim-bind-keys nil nil nil
   ("b" . eclim-problems)
   ("o" . eclim-problems-open))
 

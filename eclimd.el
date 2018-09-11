@@ -33,7 +33,8 @@
 (require 'eclim-common)
 (eval-when-compile
   (require 'eclim-macros)
-  (require 'cl-lib))
+  (require 'cl-lib)
+  (require 'dash))                     ;-when-let => when-let* in newer versions
 
 ;;;###autoload(defalias 'start-eclimd 'eclimd-start)
 (defalias 'stop-eclimd 'eclimd-stop)
