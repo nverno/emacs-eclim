@@ -31,7 +31,6 @@
 ;;; Code:
 
 (require 'eclim-common)
-;; (require 'dash)
 (eval-when-compile
   (require 'eclim-macros)
   (require 'cl-lib))

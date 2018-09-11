@@ -33,14 +33,13 @@
 ;;
 ;;; Code:
 
+(require 'eclim-common)
 (require 'eclim-project)
 (require 'eclim-java)
 (require 'eclim-maven)
 (require 'eclim-ant)
 (require 'eclim-java-run)
-(require 'eclim-common)
 (require 'gud)
-(require 'dash)
 (require 's)
 
 (eclim-bind-keys eclim-debug-keymap "p"

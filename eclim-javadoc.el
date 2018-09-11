@@ -35,6 +35,7 @@
   (require 'cl-lib))
 (require 'eclim-common)
 (require 'button)
+(autoload 'shr-render-buffer "shr")
 
 (defgroup eclim-javadoc nil
   "Major mode for perusing javadocs."

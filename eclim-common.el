@@ -33,8 +33,6 @@
 (require 'json)
 (require 'arc-mode)
 (require 'popup)
-(require 'dash)
-;;(eval-when-compile (require 'eclim-macros))
 (require 'eclim-macros)
 
 (declare-function eclim--get-problems-buffer-create "eclim-problems")
