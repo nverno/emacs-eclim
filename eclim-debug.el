@@ -42,8 +42,7 @@
 (require 'gud)
 (require 's)
 
-(eclim-bind-keys eclim-debug-keymap "p"
-  "Eclim Debug"
+(eclim-bind-keys (:map eclim-debug-keymap :prefix "p" :doc "Eclim Debug")
   ("t" . eclim-debug-test)
   ("a" . eclim-debug-attach))
 

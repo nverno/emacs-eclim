@@ -36,8 +36,7 @@
                '("\\[ERROR]\\ \\(\/.*\\):\\[\\([0-9]*\\),\\([0-9]*\\)]" 1 2 3))
               compilation-error-regexp-alist))
 
-(eclim-bind-keys eclim-maven-keymap "m"
-  "Eclim maven"
+(eclim-bind-keys (:map eclim-maven-keymap :prefix "m" :doc "Eclim Maven")
   ("p" . eclim-maven-lifecycle-phase-run)
   ("r" . eclim-maven-run))
 

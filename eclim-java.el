@@ -30,13 +30,14 @@
 ;;; Code:
 
 (require 'json)
-(require 'cl-lib)
 (require 'format-spec)
 (require 'eclim-common)
 (require 'eclim-problems)
-(eval-when-compile (require 'eclim-macros))
+(eval-when-compile
+  (require 'eclim-macros)
+  (require 'cl-lib))
 
-(eclim-bind-keys nil nil nil
+(eclim-bind-keys (:map eclim-command-map)
   ("d"   . eclim-java-doc-comment)
   ("f d" . eclim-java-find-declaration)
   ("f f" . eclim-java-find-generic)
@@ -48,7 +49,7 @@
   ("i"   . eclim-java-import-organize)
   ("n"   . eclim-java-new)
   ("r"   . eclim-java-refactor-rename-symbol-at-point)
-  ;; not defined anywhere
+  ;; this isn't defined
   ;; ("s"   . eclim-java-method-signature-at-point)
   ("t"   . eclim-run-junit)
   ("z"   . eclim-java-implement))

@@ -40,10 +40,11 @@
 (require 's)
 (require 'json)
 (require 'eclim-common)
-(require 'eclimd)
 (eval-when-compile
   (require 'eclim-macros)
   (require 'cl-lib))
+
+;;** Basics
 
 (defgroup eclim nil
   "Interface to the Eclipse IDE."

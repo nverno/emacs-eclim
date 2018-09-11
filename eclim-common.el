@@ -28,7 +28,9 @@
 ;;
 ;;; Code:
 
-(eval-when-compile (require 'cl-lib))
+(eval-when-compile
+  (require 'cl-lib)
+  (require 'dash))  ;-if-let* => if-let* in new subr-x
 (require 'etags)
 (require 'json)
 (require 'arc-mode)
@@ -55,7 +57,7 @@
            (define-key eclim-mode-map (read-kbd-macro key) 'eclim-command-map))
          (set var key)))
 
-(define-prefix-command 'eclim-command-map nil "Eclim")
+(define-prefix-command 'eclim-command-map nil "Eclim command map")
 (define-key eclim-mode-map (kbd eclim-keymap-prefix) 'eclim-command-map)
 
 (defvar eclimd-process nil

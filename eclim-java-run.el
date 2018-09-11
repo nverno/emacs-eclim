@@ -38,8 +38,7 @@
 (require 'dash)
 (require 'xml)
 
-(eclim-bind-keys java-run-keymap "u"
-  "Eclim Java Run"
+(eclim-bind-keys (:map java-run-keymap :prefix "u" :doc "Eclim Java Run")
   ("r" . eclim-java-run-run))
 
 (defun eclim-java-run-sourcepath (project)

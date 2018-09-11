@@ -65,11 +65,10 @@
     (set-keymap-parent map special-mode-map)
     map))
 
-(eclim-bind-keys nil nil nil
+(eclim-bind-keys (:map eclim-command-map)
   ("g" . eclim-project-goto))
 
-(eclim-bind-keys eclim-project-keymap "p"
-  "Eclim Project"
+(eclim-bind-keys (:map eclim-project-keymap :prefix "p" :doc "Eclim Project")
   ("p" . eclim-project-goto)
   ("m" . eclim-project-mode)
   ("i" . eclim-project-import)
