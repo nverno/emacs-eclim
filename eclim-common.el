@@ -30,7 +30,7 @@
 
 (eval-when-compile
   (require 'cl-lib)
-  (require 'dash))  ;-if-let* => if-let* in new subr-x
+  (require 'dash))
 (require 'etags)
 (require 'json)
 (require 'arc-mode)

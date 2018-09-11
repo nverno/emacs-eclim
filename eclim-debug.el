@@ -32,7 +32,7 @@
 ;; support debugging
 ;;
 ;;; Code:
-
+(eval-when-compile (require 'eclim-macros))
 (require 'eclim-common)
 (require 'eclim-project)
 (require 'eclim-java)

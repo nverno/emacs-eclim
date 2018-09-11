@@ -31,6 +31,8 @@
 ;; eclim-java-run.el -- java run configurations for eclim
 ;;
 ;;; Code:
+
+(eval-when-compile 'eclim-macros)
 (require 'eclim-common)
 (require' eclim-project)
 (require 'eclim-java)

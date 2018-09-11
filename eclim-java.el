@@ -28,7 +28,6 @@
 ;; "eclim/command-name", like eclim/project-list.
 ;;
 ;;; Code:
-
 (require 'json)
 (require 'format-spec)
 (require 'eclim-common)
@@ -49,18 +48,10 @@
   ("i"   . eclim-java-import-organize)
   ("n"   . eclim-java-new)
   ("r"   . eclim-java-refactor-rename-symbol-at-point)
-  ;; this isn't defined
+  ;; this is not defined
   ;; ("s"   . eclim-java-method-signature-at-point)
   ("t"   . eclim-run-junit)
   ("z"   . eclim-java-implement))
-
-(defvar eclim-java-show-documentation-map
-  (let ((map (make-keymap)))
-    (suppress-keymap map)
-    (define-key map (kbd "<tab>") 'forward-button)
-    (define-key map (kbd "S-<tab>") 'backward-button)
-    (define-key map (kbd "q") 'eclim-quit-window)
-    map))
 
 (defgroup eclim-java nil
   "Java: editing, browsing, refactoring"

@@ -27,7 +27,7 @@
 ;;; Commentary:
 ;;
 ;;; Code:
-
+(eval-when-compile (require 'eclim-macros))
 (require 'eclim-common)
 
 (defgroup eclim-ant nil

@@ -160,13 +160,9 @@ current buffer is still live when the closure is called."
            (with-current-buffer ,caller-current-buffer-symbol
              ,@body))))))
 
-(cl-defmacro eclim-bind-keys ((&key (map)
-                                    (prefix)
-                                    (doc (symbol-name map)))
-                              &rest bindings)
+(cl-defmacro eclim-bind-keys ((&key (map) (prefix) (doc)) &rest bindings)
   "Bind BINDINGS to leader MAP with PREFIX in variable `eclim-command-map'.
-If MAP or PREFIX are nil, then bind in variable `eclim-command-map'.
-If DOC is non-nil, it is used to describe the new prefix map."
+If MAP or PREFIX are nil, then bind in variable `eclim-command-map'."
   (declare (indent defun))
   `(progn
      ,@(if (and map prefix)
