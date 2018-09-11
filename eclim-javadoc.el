@@ -55,7 +55,7 @@
 (define-button-type 'eclim-javadoc-xref
   'follow-link t
   'help-echo "mouse-2, RET: display this javadoc"
-  'action #'eclim-java-show-documentation-follow-link)
+  'action #'eclim-javadoc-follow-link)
 
 ;;; Major mode
 
@@ -96,6 +96,24 @@ Creates a new one if necessary."
         (eclim-javadoc-mode)
         (current-buffer))))
 
+;; fixup lists where items are on different lines
+(defun eclim--javadoc-format-lists ()
+  (goto-char (point-min))
+  (let ((case-fold-search nil))
+    (while (re-search-forward "^\t-" nil 'move)
+      (while (and (not (eobp)) (looking-at-p "\\s-*$"))
+        (delete-char 1))
+      (insert " ")
+      (end-of-line)
+      (delete-horizontal-space)
+      (while (and (not (memq (char-before) '(?\; ?\.)))
+                  (not (looking-at-p "[\n\t ]*[A-Z-]")))
+        (delete-char 1)
+        (insert " ")
+        (end-of-line)
+        (delete-horizontal-space))
+      (put-text-property (point) (1+ (point)) 'hard t))))
+
 ;; format javadoc buffer: fills long lines, but tries to maintain proper
 ;; paragraph separation using `use-hard-newlines' and add text properties to the
 ;; resulting docs
@@ -111,17 +129,19 @@ Creates a new one if necessary."
     (while (re-search-forward
             ;; grab either end of paragraph, start of block (":\n"), or start of
             ;; header "some heading\n" (eg. it doesn't end with a period).
-            ;; 1        2               3              4
-            "\\(\\([[:alnum:];& ]+\\)?\\([.]\\)? *\\([:\n\t]+\\)\\)" nil 'move)
+            ;;        1        2               3              4
+            "[ \t]*\\(\\([[:alnum:]& ]+\\)?\\([.]\\)? *\\([:\n\t]+\\)\\)" nil 'move)
       (pcase (and (match-string 4) (substring (match-string 4) 0 1))
         (`":"                                       ;start of block or header
          (if (string-match-p "\t" (match-string 4)) ;header
-             (let ((beg (match-beginning 0))
-                   (end (match-end 2)))
-               (replace-match (concat ":" nlnl) nil nil nil 4)
-               (add-text-properties beg end '(face font-lock-warning-face)))
+             (if (string-match-p "Since" (match-string 2))
+                 (progn
+                   (forward-line)       ;Since: 1.0
+                   (skip-chars-forward "[ \t0-9.]" (point-at-eol))
+                   (insert nl))
+               (replace-match (concat ":" nlnl) nil nil nil 4))
            ;; start of code / output block
-           (replace-match (concat (match-string 2) ":" nl))
+           (replace-match (concat (match-string 2) ":" nl) nil nil nil 1)
            (setq in-block t)
            (add-text-properties (1- (point)) (point) '(start-block t))))
         (`"\n"
@@ -134,16 +154,32 @@ Creates a new one if necessary."
            (add-text-properties (1- (point)) (point) '(end-block t)))
           ((match-string 3)                                       ;end of paragraph
            (replace-match nlnl nil nil nil 4))
+          ((match-string 2)             ;header
+           (replace-match
+            (concat nlnl (match-string 2) nl
+                    (and (eq (char-after) ?-) nl "\t")) ;start of list
+            nil nil nil 1))
           ((memq (char-after (point-at-bol)) '(? ?	))        ;inside block
            (replace-match nl))
           (t                                                      ;header
            (if (match-string 2)
                (replace-match (concat (match-string 2) nlnl))
              (replace-match nlnl)))))
-        (`"\t"                                                    ;FIXME: in table
-         (if (match-string 2)
-             (replace-match (concat (match-string 2) nl))
-           (replace-match nlnl)))
+        (`"\t"
+         (cond
+          ((eq (char-after) ?-) ;in list
+           (save-excursion
+             (end-of-line)
+             (delete-char 1)
+             (and (looking-back "-[ \t]*") ;messed up list item
+                  (progn (end-of-line)
+                         (delete-char 1)))
+             (if (eq (char-after) ?\t)
+                 (insert nl)            ;list item
+               (insert nlnl))))         ;last list item
+          ((match-string 2)             ;block
+           (replace-match (concat (match-string 2) nl)))
+          (t nil)))
         (_ (replace-match nlnl))))
     (fill-region pos (point-max) nil 'nosqueeze)))
 
@@ -177,18 +213,31 @@ stored in the buffer-local history stack."
 
     (erase-buffer)
     (insert (cdr (assoc 'text doc)))
+    ;; (eclim--javadoc-format-buffer)
     (eclim--javadoc-highlight-references (cdr (assoc 'links doc)))
-    (eclim--javadoc-format-buffer)
 
     (when add-to-history
       (goto-char (point-max))
       (insert "\n\n")
       (insert-text-button "back" 'follow-link t 'action
-                          'eclim--java-show-documentation-go-back))
+                          'eclim--javadoc-go-back))
     (goto-char (point-min))))
 
 ;; -------------------------------------------------------------------
 ;;; Navigate links
+
+(defun eclim--javadoc-go-back (_link)
+  (let ((inhibit-read-only t))
+    (erase-buffer)
+    (insert (pop eclim-javadoc-history)))
+  (goto-char (point-min)))
+
+(defun eclim-javadoc-previous ()
+  "Navigate back to previous page if there is one."
+  (interactive)
+  (if eclim-javadoc-history
+      (eclim--javadoc-go-back nil)
+    (message "No previous pages.")))
 
 (defun eclim--javadoc-follow-eclipse-xref (url)
   "Follow the eclipse javadoc URL at point while browsing javadocs."
@@ -220,13 +269,18 @@ Return the filepath if found, otherwise nil."
                  (mapconcat (lambda (var)
                               (symbol-name var)) doc-root-vars ", "))))))
 
-(defun eclim--java-show-documentation-go-back (_link)
-  (let ((inhibit-read-only t))
-    (erase-buffer)
-    (insert (pop eclim-javadoc-history)))
-  (goto-char (point-min)))
+(defun eclim--javadoc-follow-http-xref (url)
+  "Follow the external URL.
+Replaces encoded characters in link, and returns cleaned url."
+  (let ((uri (with-temp-buffer
+               (insert url)
+               (goto-char (point-min))
+               (xml-parse-string))))
+    (prog1 uri
+      (browse-url uri))))
 
-(defun eclim-java-show-documentation-follow-link (link)
+;; TODO: links starting with '../../../'
+(defun eclim-javadoc-follow-link (link)
   "Follow the LINK at point while browsing javadocs.
 Return the url or nil if path isn't found."
   (interactive)
@@ -236,6 +290,8 @@ Return the url or nil if path isn't found."
       (eclim--javadoc-follow-eclipse-xref url))
      ((string-prefix-p "\.\." url)
       (eclim--javadoc-follow-local-xref url))
+     ((string-prefix-p "http" url)
+      (eclim--javadoc-follow-http-xref url))
      (t (message "There is no handler for this kind of url yet. \
 Implement it! : %s" url)))
     url))
