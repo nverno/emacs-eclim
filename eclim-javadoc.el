@@ -68,11 +68,12 @@
 
 (defvar eclim-javadoc-mode-map
   (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map (make-composed-keymap button-buffer-map special-mode-map))
+    (set-keymap-parent map (make-composed-keymap button-buffer-map
+                                                 special-mode-map))
     (easy-menu-define nil map nil eclim-javadoc-mode-menu)
-    (define-key map "p"            #'eclim-javadoc-previous)
-    (define-key map "w"            #'eclim-javadoc-render-html)
-    (define-key map (kbd"C-c C-z") #'eclim-javadoc-render-html)
+    (define-key map "p"             #'eclim-javadoc-previous)
+    (define-key map "w"             #'eclim-javadoc-render-html)
+    (define-key map (kbd "C-c C-z") #'eclim-javadoc-render-html)
     map)
   "Keymap used by `eclim-javadoc-mode'.")
 
@@ -329,10 +330,7 @@ Return the url or nil if path isn't found."
       (eclim--javadoc-follow-local-xref url))
      ((string-prefix-p "http" url)
       (eclim--javadoc-follow-http-xref url))
-     (t (eclim--javadoc-follow-relative-xref url))
-     ;; (t (message "There is no handler for this kind of url yet. \
-;; Implement it! : %s" url))
-     )
+     (t (eclim--javadoc-follow-relative-xref url)))
     url))
 
 ;; -------------------------------------------------------------------
@@ -350,9 +348,11 @@ Return the url or nil if path isn't found."
           (pop-to-buffer (current-buffer)))
       (message "File '%s' not found." path))))
 
+;;;###autoload
 (defalias 'eclim-java-show-documentation-for-current-element
   'eclim-javadoc-element-at-point)
 
+;;;###autoload
 (defun eclim-javadoc-element-at-point ()
   "Displays the doc comments for the element at the point.
 Returns the results from eclim or nil."
@@ -371,8 +371,8 @@ Returns the results from eclim or nil."
             (pop-to-buffer (eclim-javadoc-buffer))
             (eclim--javadoc-insert-doc-and-format doc)
 
-            ;; return the doc string
-            (prog1 doc ;; (buffer-string)
+            ;; return eclim results
+            (prog1 doc
               (message (substitute-command-keys
                         (concat
                          "\\[forward-button] - move to next link, "
@@ -382,8 +382,10 @@ Returns the results from eclim or nil."
       (message "No element found at point.")
       nil)))
 
+;;;###autoload
 (defalias 'eclim-java-browse-documentation-at-point
   'eclim-javadoc-browse-element-at-point)
+;;;###autoload
 (defun eclim-javadoc-browse-element-at-point (&optional arg)
   "Browse the documentation of the element at point.
 With the prefix ARG, ask for pattern.  Pattern is a shell glob
