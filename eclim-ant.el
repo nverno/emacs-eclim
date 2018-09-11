@@ -26,23 +26,23 @@
 ;;
 ;;; Commentary:
 ;;
-;;* Eclim Ant
+;;; Code:
 
 (require 'eclim-common)
 
 (defgroup eclim-ant nil
-  "Build java projects using Apache Ant"
+  "Build java projects using Apache Ant."
   :group 'eclim)
 
-(eclim-bind-keys eclim-ant-keymap "a"
+(eclim-bind-keys (:map eclim-ant-keymap :prefix "a" :doc "Eclim Ant")
   ("c" . eclim-ant-clear-cache)
   ("r" . eclim-ant-run)
   ("a" . eclim-ant-run)
   ("v" . eclim-ant-validate))
 
 (defcustom eclim-ant-directory ""
-  "This variable contains the location, where the main buildfile is
-stored. It is used globally for all eclim projects."
+  "This variable contains the location, where the main buildfile is stored.
+It is used globally for all eclim projects."
   :group 'eclim-ant
   :type 'directory)
 
@@ -57,16 +57,19 @@ stored. It is used globally for all eclim projects."
   (concat (file-name-as-directory eclim-ant-directory) eclim-ant-buildfile-name))
 
 (defun eclim--ant-buildfile-path ()
-  (file-name-directory (concat (eclim--project-dir) "/" (eclim--ant-buildfile-name))))
+  (file-name-directory
+   (concat (eclim--project-dir) "/" (eclim--ant-buildfile-name))))
 
 (defun eclim--ant-targets (project buildfile)
   (when (null eclim--ant-target-cache)
     (setq eclim--ant-target-cache (make-hash-table :test 'equal)))
   (or (gethash buildfile eclim--ant-target-cache)
-      (puthash buildfile (eclim/ant-target-list project buildfile) eclim--ant-target-cache)))
+      (puthash buildfile (eclim/ant-target-list project buildfile)
+               eclim--ant-target-cache)))
 
 (defun eclim--ant-read-target (project buildfile)
-  (eclim--completing-read "Target: " (append (eclim--ant-targets project buildfile) nil)))
+  (eclim--completing-read
+   "Target: " (append (eclim--ant-targets project buildfile) nil)))
 
 (defun eclim/ant-validate (project buildfile)
   (eclim--check-project project)
@@ -79,8 +82,9 @@ stored. It is used globally for all eclim projects."
   (eclim--call-process "ant_targets" "-p" project "-f" buildfile))
 
 (defun eclim-ant-clear-cache ()
-  "Clear the cached ant target list. This can be usefull when the
-buildfile for the current project has changed and needs to be updated"
+  "Clear the cached ant target list.
+This can be usefull when the buildfile for the current project has changed and
+needs to be updated."
   (interactive)
   (setq eclim--ant-target-cache nil))
 
@@ -100,9 +104,9 @@ buildfile for the current project has changed and needs to be updated"
 ;;   (compilation-mode))
 
 (defun eclim-ant-run (target)
-  "run a specified ant target in the scope of the current project. If
-the function is called interactively the users is presented with a
-  list of all available ant targets."
+  "Run a specified ant TARGET in the scope of the current project.
+If the function is called interactively the users is presented with a list of
+all available ant targets."
   (interactive (list (eclim--ant-read-target (eclim-project-name)
                                              (eclim--ant-buildfile-name))))
   (let ((default-directory (eclim--ant-buildfile-path)))
@@ -110,3 +114,4 @@ the function is called interactively the users is presented with a
     (compile (concat "ant " target))))
 
 (provide 'eclim-ant)
+;;; eclim-ant.el ends here
