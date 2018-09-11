@@ -51,6 +51,8 @@
 (defvar eclim-javadoc-sections
   '("Implementation Note" "See Also" "Since"))
 
+(eval-when-compile (defvar eclim-javadoc-history))
+
 ;;; buttons
 (define-button-type 'eclim-javadoc-xref
   'follow-link t
@@ -96,6 +98,15 @@ Creates a new one if necessary."
         (eclim-javadoc-mode)
         (current-buffer))))
 
+(defsubst eclim--javadoc-current-package ()
+  (save-excursion
+    (goto-char (point-min))
+    (split-string (buffer-substring-no-properties (point) (point-at-eol)) "[.]")))
+
+;; current directory path to documentation (from root)
+(defsubst eclim--javadoc-current-path ()
+  (mapconcat 'identity (eclim--javadoc-current-package) "/"))
+
 ;; fixup lists where items are on different lines
 (defun eclim--javadoc-format-lists ()
   (goto-char (point-min))
@@ -118,6 +129,7 @@ Creates a new one if necessary."
 ;; paragraph separation using `use-hard-newlines' and add text properties to the
 ;; resulting docs
 (defun eclim--javadoc-format-buffer ()
+  (eclim--javadoc-format-lists)
   (let ((use-hard-newlines t)
         (nlnl "\n\n")
         (nl "\n")
@@ -171,7 +183,8 @@ Creates a new one if necessary."
            (save-excursion
              (end-of-line)
              (delete-char 1)
-             (and (looking-back "-[ \t]*") ;messed up list item
+             ;;messed up list item
+             (and (looking-back "-[ \t]*" (line-beginning-position))
                   (progn (end-of-line)
                          (delete-char 1)))
              (if (eq (char-after) ?\t)
@@ -185,7 +198,7 @@ Creates a new one if necessary."
 
 ;; remove any extraneous stuff from link text
 (defsubst eclim--javadoc-clean-link (link-text)
-  (replace-regexp-in-string "</?code>" "" link-text))
+  (replace-regexp-in-string "</?[A-Za-z]+>" "" link-text))
 
 (defun eclim--javadoc-highlight-references (links)
   "Create cross-references for LINKS in javadoc buffer."
@@ -195,6 +208,7 @@ Creates a new one if necessary."
             text (eclim--javadoc-clean-link (cdr (assoc 'text link)))
             href (cdr (assoc 'href link))
             placeholder (format "|%s[%s]|" text i))
+      ;; (insert placeholder href "\n")
       (goto-char (point-min))
       (while (search-forward placeholder nil 'move)
         (replace-match text)
@@ -213,7 +227,7 @@ stored in the buffer-local history stack."
 
     (erase-buffer)
     (insert (cdr (assoc 'text doc)))
-    ;; (eclim--javadoc-format-buffer)
+    (eclim--javadoc-format-buffer)
     (eclim--javadoc-highlight-references (cdr (assoc 'links doc)))
 
     (when add-to-history
@@ -245,29 +259,37 @@ stored in the buffer-local history stack."
     (eclim--javadoc-insert-doc-and-format doc t))
   url)
 
+(defun eclim--javadoc-docpath (path)
+  "Return fully qualified PATH to local documentation or nil."
+  (or
+   (cl-some
+    (lambda (var)
+      (let ((fullpath (expand-file-name path (symbol-value var))))
+        (and (file-exists-p (replace-regexp-in-string "#.+" "" fullpath))
+             fullpath)))
+    '(eclim-java-documentation-root
+      eclim-java-android-documentation-root))
+   (prog1 nil
+     (message "Can't find the root directory for file: '%s'" path))))
+
+(defun eclim--javadoc-follow-relative-xref (url)
+  "Follow URL to a javadoc relative to the current package directory.
+Return the full path or nil."
+  (let ((path (eclim--javadoc-docpath (eclim--javadoc-current-path))))
+    (when path
+      (setq path (if (string-prefix-p "#" url)
+                     (concat path "/package-summary.html" url)
+                   (expand-file-name url path)))
+      (and (file-exists-p (replace-regexp-in-string "#.+" "" path))
+           (prog1 path
+             (browse-url (concat "file://" path)))))))
+
 (defun eclim--javadoc-follow-local-xref (url)
   "Try to follow a local URL to a javadoc.
 Return the filepath if found, otherwise nil."
-  (let* ((doc-root-vars '(eclim-java-documentation-root
-                          eclim-java-android-documentation-root))
-         (path (replace-regexp-in-string "^[./]+" "" url))
-         (fullpath (cl-some
-                    (lambda (var)
-                      (let ((fullpath (concat (symbol-value var) "/" path)))
-                        (and (file-exists-p
-                              (replace-regexp-in-string "#.+" "" fullpath))
-                             fullpath)))
-                    doc-root-vars))
-         (filepath (and fullpath (concat "file://" fullpath))))
-    ;; return the filepath or nil
-    (prog1 filepath
-      (if filepath
-          (browse-url filepath)
-        (message (concat "Can't find the root directory for this file: %s. "
-                         "Are the applicable variables set properly? (%s)")
-                 path
-                 (mapconcat (lambda (var)
-                              (symbol-name var)) doc-root-vars ", "))))))
+  (let ((path (eclim--javadoc-docpath
+               (replace-regexp-in-string "^[./]+" "" url))))
+    (prog1 path (browse-url (concat "file://" path)))))
 
 (defun eclim--javadoc-follow-http-xref (url)
   "Follow the external URL.
@@ -292,8 +314,10 @@ Return the url or nil if path isn't found."
       (eclim--javadoc-follow-local-xref url))
      ((string-prefix-p "http" url)
       (eclim--javadoc-follow-http-xref url))
-     (t (message "There is no handler for this kind of url yet. \
-Implement it! : %s" url)))
+     (t (eclim--javadoc-follow-relative-xref url))
+     ;; (t (message "There is no handler for this kind of url yet. \
+;; Implement it! : %s" url))
+     )
     url))
 
 ;; -------------------------------------------------------------------
@@ -319,7 +343,7 @@ Returns the results from eclim or nil."
 
             (pop-to-buffer (eclim-javadoc-buffer))
             (eclim--javadoc-insert-doc-and-format doc)
-            ;; (insert (cdr (assoc 'text doc)))
+
             ;; return the doc string
             (prog1 doc ;; (buffer-string)
               (message (substitute-command-keys
