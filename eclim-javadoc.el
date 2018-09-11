@@ -106,7 +106,7 @@ Creates a new one if necessary."
 (defun eclim--javadoc-current-package (&optional class)
   "Determine the current package for this javadoc.
 If CLASS is non-nil, return the path with the CLASS as well."
-  (let ((pkg 
+  (let ((pkg
          (split-string
           (buffer-substring-no-properties
            (point-min)
