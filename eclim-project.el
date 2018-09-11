@@ -69,6 +69,7 @@
   ("g" . eclim-project-goto))
 
 (eclim-bind-keys eclim-project-keymap "p"
+  "Eclim Project"
   ("p" . eclim-project-goto)
   ("m" . eclim-project-mode)
   ("i" . eclim-project-import)

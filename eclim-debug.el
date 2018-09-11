@@ -44,6 +44,7 @@
 (require 's)
 
 (eclim-bind-keys eclim-debug-keymap "p"
+  "Eclim Debug"
   ("t" . eclim-debug-test)
   ("a" . eclim-debug-attach))
 

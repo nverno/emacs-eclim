@@ -57,7 +57,7 @@
            (define-key eclim-mode-map (read-kbd-macro key) 'eclim-command-map))
          (set var key)))
 
-(define-prefix-command 'eclim-command-map nil "Eclim command map.")
+(define-prefix-command 'eclim-command-map nil "Eclim")
 (define-key eclim-mode-map (kbd eclim-keymap-prefix) 'eclim-command-map)
 
 (defvar eclimd-process nil

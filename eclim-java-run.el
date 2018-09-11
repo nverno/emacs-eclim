@@ -39,6 +39,7 @@
 (require 'xml)
 
 (eclim-bind-keys java-run-keymap "u"
+  "Eclim Java Run"
   ("r" . eclim-java-run-run))
 
 (defun eclim-java-run-sourcepath (project)

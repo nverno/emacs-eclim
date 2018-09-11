@@ -37,6 +37,7 @@
               compilation-error-regexp-alist))
 
 (eclim-bind-keys eclim-maven-keymap "m"
+  "Eclim maven"
   ("p" . eclim-maven-lifecycle-phase-run)
   ("r" . eclim-maven-run))
 

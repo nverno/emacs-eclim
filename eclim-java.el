@@ -40,7 +40,7 @@
 (eval-when-compile (require 'eclim-macros))
 
 (eclim-bind-keys nil nil
-  ("d" . eclim-java-doc-comment)
+  ("d"   . eclim-java-doc-comment)
   ("f d" . eclim-java-find-declaration)
   ("f f" . eclim-java-find-generic)
   ("f r" . eclim-java-find-references)
@@ -48,12 +48,12 @@
   ("f t" . eclim-java-find-type)
   ("g"   . eclim-java-generate-getter-and-setter)
   ("h"   . eclim-java-hierarchy)
-  ("i"  . eclim-java-import-organize)
-  ("n" . eclim-java-new)
-  ("r" . eclim-java-refactor-rename-symbol-at-point)
-  ("s" . eclim-java-method-signature-at-point)
-  ("t" . eclim-run-junit)
-  ("z" . eclim-java-implement))
+  ("i"   . eclim-java-import-organize)
+  ("n"   . eclim-java-new)
+  ("r"   . eclim-java-refactor-rename-symbol-at-point)
+  ;; ("s"   . eclim-java-method-signature-at-point)
+  ("t"   . eclim-run-junit)
+  ("z"   . eclim-java-implement))
 
 (defvar eclim-java-show-documentation-map
   (let ((map (make-keymap)))
@@ -820,175 +820,6 @@ much faster than running mvn test -Dtest=TestClass#method."
     (compile (if (eclim-java-junit-buffer?)
                  (eclim--java-junit-file project file offset encoding)
                (eclim--java-junit-project project encoding)))))
-
-(defun eclim-java-browse-documentation-at-point (&optional arg)
-  "Browse the documentation of the element at point.
-With the prefix ARG, ask for pattern.  Pattern is a shell glob
-pattern, not a regexp.  Rely on `browse-url' to open user defined
-browser."
-  (interactive "P")
-  (let ((symbol (if arg
-                    (read-string "Glob Pattern: ")
-                  (symbol-at-point)))
-        (proj-name (or (eclim-project-name)
-                       (error "Not in Eclim project"))))
-    (if symbol
-        (let* ((urls (if arg
-                         (eclim/execute-command "java_docsearch"
-                                                ("-n" proj-name)
-                                                "-f"
-                                                ("-p" symbol))
-                       (let ((bounds (bounds-of-thing-at-point 'symbol)))
-                         (eclim/execute-command "java_docsearch"
-                                                ("-n" proj-name)
-                                                "-f"
-                                                ("-l" (- (cdr bounds) (car bounds)))
-                                                ("-o" (save-excursion
-                                                        (goto-char (car bounds))
-                                                        (eclim--byte-offset)))))))
-               ;; convert from vector to list
-               (urls (append urls nil)))
-          (if urls
-              (let ((url (if (> (length urls) 1)
-                             (eclim--completing-read "Browse: " (append urls nil))
-                           (car urls))))
-                (browse-url url))
-            (message "No documentation for '%s' found" symbol)))
-      (message "No element at point"))))
-
-(defun eclim-java-show-documentation-for-current-element ()
-  "Displays the doc comments for the element at the pointers position."
-  (interactive)
-  (let ((symbol (symbol-at-point)))
-    (if symbol
-        (let ((bounds (bounds-of-thing-at-point 'symbol)))
-          (eclim/with-results doc ("java_element_doc"
-                                   ("-p" (eclim-project-name))
-                                   "-f"
-                                   ("-l" (- (cdr bounds) (car bounds)))
-                                   ("-o" (save-excursion
-                                           (goto-char (car bounds))
-                                           (eclim--byte-offset))))
-
-            (pop-to-buffer "*java doc*")
-            (use-local-map eclim-java-show-documentation-map)
-
-            (eclim--java-show-documentation-and-format doc)
-
-            ;; return the doc string
-            (prog1 (buffer-string)
-              (message (substitute-command-keys
-                        (concat
-                         "\\[forward-button] - move to next link, "
-                         "\\[backward-button] - move to previous link, "
-                         "\\[eclim-quit-window] - quit"))))))
-
-      (message "No element found at point."))))
-
-;; insert prettified doc string: fills long lines, but tries to maintain proper
-;; paragraph separation using `use-hard-newlines' and add text properties to the
-;; resulting docs
-(defun eclim--java-insert-documentation-formatted (doc)
-  (insert (cdr (assoc 'text doc)))
-  (let ((use-hard-newlines t)
-        (nlnl "\n\n")
-        (nl "\n")
-        (pos (progn (goto-char (point-min)) (forward-line 2) (point)))
-        in-block)
-    (put-text-property 0 1 'hard t nl)
-    (put-text-property 0 1 'hard t nlnl)
-    (while (re-search-forward
-            "\\(\\([:[alpha]:]+\\)? *\\([:\n\t]\\)+\\)" nil 'move)
-      (cond
-       ((string-match-p (match-string 3) ":")
-        (if (not (string-match-p (match-string 3) "\n"))
-            (replace-match (concat nl (concat (match-string 2) ":") nl))
-          (setq in-block t)
-          (replace-match (concat ":" nlnl))    ;start of block
-          (add-text-properties (1- (point)) (point) '(start-block t))))
-       ((and in-block (looking-at-p "\\s-*$")) ;end of block
-        (setq in-block nil)
-        (replace-match nl)
-        (add-text-properties (1- (point)) (point) '(end-block t))
-        (forward-line))
-       ((memq (char-after (point-at-bol)) '(? ?	))
-        (replace-match nl))                    ;inside code / output block
-       (t (replace-match nlnl))))
-    (fill-region pos (point-max) nil 'nosqueeze)))
-
-(defun eclim--java-show-documentation-and-format (doc &optional add-to-history)
-  (make-local-variable 'eclim-java-show-documentation-history)
-  (setq eclim-java-show-documentation-history
-        (if add-to-history
-            (push (buffer-substring (point-min) (point-max))
-                  eclim-java-show-documentation-history)))
-
-  (erase-buffer)
-  (eclim--java-insert-documentation-formatted doc)
-
-  (let ((links (cdr (assoc 'links doc)))
-        link placeholder text href)
-    (dotimes (i (length links))
-      (setq link (aref links i))
-      (setq text (replace-regexp-in-string "</?code>" "" (cdr (assoc 'text link))))
-      (setq href (cdr (assoc 'href link)))
-      (setq placeholder (format "|%s[%s]|" text i))
-      (goto-char (point-min))
-      (while (search-forward placeholder nil t)
-        (replace-match text)
-        (make-text-button (match-beginning 0)
-                          (+ (match-beginning 0) (length text))
-                          'follow-link t
-                          'action 'eclim-java-show-documentation-follow-link
-                          'url href))))
-
-  (when add-to-history
-    (goto-char (point-max))
-    (insert "\n\n")
-    (insert-text-button "back" 'follow-link t 'action
-                        'eclim--java-show-documentation-go-back))
-  (goto-char (point-min)))
-
-(defun eclim-java-show-documentation-follow-link (link)
-  "Follow the LINK at point while browsing javadocs."
-  (interactive)
-  (let ((url (button-get link 'url)))
-    (if (string-match "^eclipse-javadoc" url)
-        (eclim/with-results doc ("java_element_doc"
-                                 ("-u" url))
-          (eclim--java-show-documentation-and-format doc t))
-
-      (if (string-match "^\.\." url)
-          (let* ((doc-root-vars '(eclim-java-documentation-root
-                                  eclim-java-android-documentation-root))
-                 (path (replace-regexp-in-string "^[./]+" "" url))
-                 (fullpath (cl-some (lambda (var)
-                                      (let ((fullpath (concat (symbol-value var)
-                                                              "/"
-                                                              path)))
-                                        (if (file-exists-p (replace-regexp-in-string
-                                                            "#.+"
-                                                            ""
-                                                            fullpath))
-                                         fullpath)))
-                                    doc-root-vars)))
-            (if fullpath
-                (browse-url (concat "file://" fullpath))
-
-              (message (concat "Can't find the root directory for this file: %s. "
-                               "Are the applicable variables set properly? (%s)")
-                       path
-                       (mapconcat (lambda (var)
-                                    (symbol-name var))
-                                  doc-root-vars ", "))))
-
-        (message "There is no handler for this kind of url yet. Implement it! : %s"
-                 url)))))
-
-(defun eclim--java-show-documentation-go-back (_link)
-  (erase-buffer)
-  (insert (pop eclim-java-show-documentation-history))
-  (goto-char (point-min)))
 
 (provide 'eclim-java)
 ;;; eclim-java.el ends here

@@ -35,6 +35,7 @@
   :group 'eclim)
 
 (eclim-bind-keys eclim-ant-keymap "a"
+  "Eclim Ant"
   ("c" . eclim-ant-clear-cache)
   ("r" . eclim-ant-run)
   ("a" . eclim-ant-run)
