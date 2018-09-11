@@ -61,16 +61,20 @@
 
 ;;; Major mode
 
+(defvar eclim-javadoc-mode-menu
+  '("Javadoc"
+    ["Previous" eclim-javadoc-previous t]
+    ["Render HTML" eclim-javadoc-render-html t]))
+
 (defvar eclim-javadoc-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map (make-composed-keymap button-buffer-map special-mode-map))
-    (define-key map "p" #'eclim-javadoc-previous)
-    ;; (define-key map "n" #'eclim-javadoc-next)
+    (easy-menu-define nil map nil eclim-javadoc-mode-menu)
+    (define-key map "p"            #'eclim-javadoc-previous)
+    (define-key map "w"            #'eclim-javadoc-render-html)
+    (define-key map (kbd"C-c C-z") #'eclim-javadoc-render-html)
     map)
   "Keymap used by `eclim-javadoc-mode'.")
-
-(defvar eclim-javadoc-mode-menu
-  '("Javadoc"))
 
 (eval-when-compile
   (defmacro eclim--sym-re (syms &optional follow)
@@ -98,14 +102,25 @@ Creates a new one if necessary."
         (eclim-javadoc-mode)
         (current-buffer))))
 
-(defsubst eclim--javadoc-current-package ()
-  (save-excursion
-    (goto-char (point-min))
-    (split-string (buffer-substring-no-properties (point) (point-at-eol)) "[.]")))
+(defun eclim--javadoc-current-package (&optional class)
+  "Determine the current package for this javadoc.
+If CLASS is non-nil, return the path with the CLASS as well."
+  (let ((pkg 
+         (split-string
+          (buffer-substring-no-properties
+           (point-min)
+           (line-end-position  (+ 2 (- (line-number-at-pos))))) "\\."))
+        pkg-class)
+    (if class
+        pkg
+      (setq pkg-class (car (last pkg)))
+      (if (and pkg-class (string-match-p "^[A-Z]" pkg-class))
+          (butlast pkg)
+        pkg))))
 
 ;; current directory path to documentation (from root)
-(defsubst eclim--javadoc-current-path ()
-  (mapconcat 'identity (eclim--javadoc-current-package) "/"))
+(defun eclim--javadoc-current-path (&optional class)
+  (mapconcat 'identity (eclim--javadoc-current-package class) "/"))
 
 ;; fixup lists where items are on different lines
 (defun eclim--javadoc-format-lists ()
@@ -322,6 +337,18 @@ Return the url or nil if path isn't found."
 
 ;; -------------------------------------------------------------------
 ;;; Commands
+
+(defun eclim-javadoc-render-html ()
+  "Render the current javadoc as HTML using shr if possible."
+  (interactive)
+  (let* ((doc (concat (eclim--javadoc-current-path 'class) ".html"))
+         (path (eclim--javadoc-docpath doc)))
+    (if path
+        (with-current-buffer (get-buffer-create (concat "*" doc "*"))
+          (insert-file-contents path)
+          (shr-render-buffer (current-buffer))
+          (pop-to-buffer (current-buffer)))
+      (message "File '%s' not found." path))))
 
 (defalias 'eclim-java-show-documentation-for-current-element
   'eclim-javadoc-element-at-point)
