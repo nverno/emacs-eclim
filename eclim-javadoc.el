@@ -41,8 +41,7 @@
   "Major mode for perusing javadocs."
   :group 'eclim)
 
-(eclim-bind-keys eclim-javadoc-map "?"
-  "Eclim Javadoc"
+(eclim-bind-keys (:map eclim-javadoc-map :prefix "?" :doc "Eclim Javadoc")
   ("?" . eclim-javadoc-element-at-point)
   ("b" . eclim-javadoc-browse-element-at-point))
 
