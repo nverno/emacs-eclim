@@ -32,7 +32,8 @@
 
 (eval-when-compile
   (require 'eclim-macros)
-  (require 'cl-lib))
+  (require 'cl-lib)
+  (defvar eclim-javadoc-history))
 (require 'eclim-common)
 (require 'button)
 (autoload 'shr-render-buffer "shr")
@@ -50,8 +51,6 @@
 
 (defvar eclim-javadoc-sections
   '("Implementation Note" "See Also" "Since"))
-
-(eval-when-compile (defvar eclim-javadoc-history))
 
 ;;; buttons
 (define-button-type 'eclim-javadoc-xref
