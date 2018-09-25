@@ -33,8 +33,8 @@
 ;;
 ;;; Code:
 
-(require 'thingatpt)
 (eval-when-compile (require 'cl-lib))
+(require 'thingatpt)
 (require 's)
 (require 'yasnippet)
 (require 'eclim-common)
