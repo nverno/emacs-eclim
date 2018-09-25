@@ -489,7 +489,7 @@ of CMD.  Each argument will be expanded using
   (eclim/execute-command "project_list"))
 
 (defun eclim--project-dir (&optional projectname)
-  "Return this project's root directory.
+  "Return this project's root directory or nil if not currently in one.
 If the optional argument PROJECTNAME is given, return that project's root
 directory."
   (assoc-default 'path (eclim/project-info (or projectname (eclim-project-name)))))
