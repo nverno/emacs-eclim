@@ -52,72 +52,84 @@ the following forms:
             (lambda (&rest _) current-status))))
 
 (describe "eclimd"
-          (describe "eclimd--match-process-output"
-                    (it "executes callback before returning when the supplied regexp matches the output"
-                        (test-eclimd--fake-process-events
-                         '("a string\n"
-                           "a different string to be matched plus bonus\n"
-                           "some more text"))
-                        (let ((marker nil))
-                          (eclimd--match-process-output "string to be matched"
-                                                        nil
-                                                        (lambda (&rest _) (setq marker t)))
-                          (expect marker :to-be-truthy)))
-                    (it "returns when the regexp matches inside the concatinated output"
-                        (test-eclimd--fake-process-events
-                         '("a string\n"
-                           "a different string "
-                           "to be "
-                           "matched\n"
-                           "some more text"))
-                        (eclimd--match-process-output "string to be matched" nil nil))
-                    (it "returns the concatinated output until the match and passes it to the callback"
-                        ;; This one is a little tricky since it is not specified
-                        ;; how much of the output is included in the return
-                        ;; value. It may or may not end immediatly after the
-                        ;; string to be matched.
-                        (let* ((events '("a string\n"
-                                         "a different string "
-                                         "to be "
-                                         "matched"))
-                               (expected-output (apply 'concat events))
-                               (marker nil))
-                          (test-eclimd--fake-process-events events)
-                          (expect (eclimd--match-process-output
-                                   "string to be matched" nil
-                                   (lambda (output)
-                                     (expect output :to-equal expected-output)
-                                     (setq marker t)))
-                                  :to-equal expected-output)
-                          ;; Ensure the callback was actually executed.
-                          (expect marker :to-be-truthy))))
-          (describe "eclimd--await-connection"
-                    (it "executes callback before returning when async is nil"
-                        (test-eclimd--fake-process-events
-                         '("/usr/bin/java -version\njava version \"1.8.0_112\"\n"
-                           "2017-02-27 [org.eclim.eclipse.EclimDaemon] Eclim Server "
-                           "Started on: 127.0.0.1:9091\n"))
-                        (let ((marker nil))
-                          (eclimd--await-connection nil (lambda () (setq marker t)))
-                          (expect marker :to-be-truthy)))
-                    (it "does not execute callback when eclimd fails to start"
-                        (test-eclimd--fake-process-events
-                         '("/usr/bin/java -version\n"
-                           (:set-status . exit)
-                           (:state-change . "exited abnormally with code 1\n")))
-                        (let ((marker nil))
-                          (eclimd--await-connection nil (lambda () (setq marker t)))
-                          (expect marker :not :to-be-truthy)))
-                    (it "executes callback after a match when ASYNC is t"
-                        (test-eclimd--fake-process-events
-                         '("First string "
-                           "Eclim Server Started on: 127.0.0.1:9091"))
-                        (let ((marker nil))
-                          (eclimd--await-connection t (lambda () (setq marker t)))
-                          (expect marker :not :to-be-truthy)
-                          (accept-process-output)  ; Pops the first string off the list.
-                          (expect marker :not :to-be-truthy)
-                          (accept-process-output) ; Pops the second, matching string.
-                          (expect marker :to-be-truthy)))))
+  (describe "eclimd--match-process-output"
+    (it "executes callback before returning when the supplied regexp matches \
+the output"
+      (test-eclimd--fake-process-events
+       '("a string\n"
+         "a different string to be matched plus bonus\n"
+         "some more text"))
+      (let ((marker nil))
+        (eclimd--match-process-output "string to be matched"
+                                      nil
+                                      (lambda (&rest _) (setq marker t)))
+        (expect marker :to-be-truthy)))
+    (it "returns when the regexp matches inside the concatinated output"
+      (test-eclimd--fake-process-events
+       '("a string\n"
+         "a different string "
+         "to be "
+         "matched\n"
+         "some more text"))
+      (eclimd--match-process-output "string to be matched" nil nil))
+    (it "returns the concatinated output until the match and passes it to the \
+callback"
+      ;; This one is a little tricky since it is not specified
+      ;; how much of the output is included in the return
+      ;; value. It may or may not end immediatly after the
+      ;; string to be matched.
+      (let* ((events '("a string\n"
+                       "a different string "
+                       "to be "
+                       "matched"))
+             (expected-output (apply 'concat events))
+             (marker nil))
+        (test-eclimd--fake-process-events events)
+        (expect (eclimd--match-process-output
+                 "string to be matched" nil
+                 (lambda (output)
+                   (expect output :to-equal expected-output)
+                   (setq marker t)))
+                :to-equal expected-output)
+        ;; Ensure the callback was actually executed.
+        (expect marker :to-be-truthy))))
+
+  (describe "eclimd--await-connection"
+    (it "executes callback before returning when async is nil"
+      (test-eclimd--fake-process-events
+       '("/usr/bin/java -version\njava version \"1.8.0_112\"\n"
+         "2017-02-27 [org.eclim.eclipse.EclimDaemon] Eclim Server "
+         "Started on: 127.0.0.1:9091\n"))
+      (let ((marker nil))
+        (eclimd--await-connection nil (lambda () (setq marker t)))
+        (expect marker :to-be-truthy)))
+    (it "does not execute callback when eclimd fails to start"
+      (test-eclimd--fake-process-events
+       '("/usr/bin/java -version\n"
+         (:set-status . exit)
+         (:state-change . "exited abnormally with code 1\n")))
+      (let ((marker nil))
+        (eclimd--await-connection nil (lambda () (setq marker t)))
+        (expect marker :not :to-be-truthy)))
+    (it "executes callback after a match when ASYNC is t"
+      (test-eclimd--fake-process-events
+       '("First string "
+         "Eclim Server Started on: 127.0.0.1:9091"))
+      (let ((marker nil))
+        (eclimd--await-connection t (lambda () (setq marker t)))
+        (expect marker :not :to-be-truthy)
+        (accept-process-output)  ; Pops the first string off the list.
+        (expect marker :not :to-be-truthy)
+        (accept-process-output) ; Pops the second, matching string.
+        (expect marker :to-be-truthy))))
+
+  (describe "eclimd-start"
+    (assume (executable-find "yes") nil)
+    (it "doesn't error when not started in eclim project"
+      (let ((eclimd-executable "yes")
+            (eclimd-wait-for-process nil)
+            (inhibit-message t))
+        (expect (eclimd-start "~/workspace" nil) :not :to-throw)
+        (remove-hook 'kill-emacs-hook 'eclimd-stop)))))
 
 ;;; test-eclimd.el ends here
