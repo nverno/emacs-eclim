@@ -285,9 +285,10 @@ To stop the server, you should use `eclimd-start'."
          (not eclimd-wait-for-process)
          (lambda ()
            (message "eclimd serving at port %s" eclimd-port)
+           ;; don't error when not currently in eclim project
            (condition-case nil
                (eclim--problems-update-maybe)
-             (error (message "Not currently in eclim project.")))
+             (error (message "Not currently in eclim project.") nil))
            (when callback (funcall callback))))))))
 
 (defun eclimd--ensure-started (&optional async callback)
