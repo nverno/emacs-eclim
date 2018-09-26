@@ -492,7 +492,8 @@ of CMD.  Each argument will be expanded using
   "Return this project's root directory or nil if not currently in one.
 If the optional argument PROJECTNAME is given, return that project's root
 directory."
-  (assoc-default 'path (eclim/project-info (or projectname (eclim-project-name)))))
+  (assoc-default
+   'path (eclim/project-info (or projectname (eclim-project-name)))))
 
 (defun eclim--byte-offset (&optional _text)
   "Return the current position in the buffer in bytes.
@@ -764,7 +765,7 @@ containing non-ASCII characters)."
 The refresh is only triggered if auto-updated is enabled.
 The delay is specified by `eclim-problems-refresh-delay'."
   (when (and (not eclim--is-completing)
-             (eclim--project-dir)
+             (ignore-errors (eclim--project-dir)) ;dont error when not in project
              eclim-autoupdate-problems)
     (setq eclim--problems-project (eclim-project-name))
     (setq eclim--problems-file buffer-file-name)
