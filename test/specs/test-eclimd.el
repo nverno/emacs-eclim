@@ -22,7 +22,7 @@
 ;; Buttercup tests for eclimd.el.
 
 ;;; Code:
-
+(require 'buttercup)
 (require 'undercover-init.el)
 (require 'eclimd)
 
@@ -121,15 +121,32 @@ callback"
         (accept-process-output)  ; Pops the first string off the list.
         (expect marker :not :to-be-truthy)
         (accept-process-output) ; Pops the second, matching string.
-        (expect marker :to-be-truthy))))
+        (expect marker :to-be-truthy)))))
 
+(describe "eclimd start/stop"
+  (assume (executable-find "/bin/true") nil)  ;dummy program
+  (before-each
+    (setq eclimd-executable "/bin/true"
+          eclim-executable "/bin/true"
+          eclimd-wait-for-process t
+          inhibit-message t))
+  (after-each
+    (ignore-errors (kill-process eclimd-process))
+    (remove-hook 'kill-emacs-hook 'eclimd-stop))
+  
   (describe "eclimd-start"
-    (assume (executable-find "yes") nil)
     (it "doesn't error when not started in eclim project"
-      (let ((eclimd-executable "yes")
-            (eclimd-wait-for-process nil)
-            (inhibit-message t))
-        (expect (eclimd-start "~/workspace" nil) :not :to-throw)
-        (remove-hook 'kill-emacs-hook 'eclimd-stop)))))
+      (expect (eclimd-start "~/workspace") :not :to-throw)))
+
+  (describe "eclimd-stop"
+    (it "doesn't hang when called interactively and cleans up after itself"
+      (let ((noninteractive nil) marker)
+        (eclimd-start "~workspace/")
+        (with-timeout (1 (setq marker t))
+          (call-interactively 'eclimd-stop))
+        (expect marker :not :to-be-truthy)
+        (when (not marker)
+          (expect (buffer-live-p eclimd-process-buffer) :not :to-be-truthy)
+          (expect 'eclimd-stop :not :to-be-in kill-emacs-hook))))))
 
 ;;; test-eclimd.el ends here

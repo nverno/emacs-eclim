@@ -222,7 +222,7 @@ corresponding return value as argument."
       (unwind-protect
           (progn
             (add-hook 'eclimd--process-event-functions closure)
-            (while (and (process-live-p eclimd-process) (not finished-p))
+            (while (not finished-p)
               (accept-process-output eclimd-process))
             (unless terminated-p output))
         (remove-hook 'eclimd--process-event-functions closure)))))
@@ -256,7 +256,7 @@ block until eclimd is ready to receive commands, depending
 on the value of `eclimd-wait-for-process'.  Commands will
 fail if they are executed before the server is ready.
 
-To stop the server, you should use `eclimd-start'."
+To stop the server, you should use `eclimd-stop'."
   (interactive (list (eclimd--read-workspace-dir)))
   (let ((eclimd-prog (eclimd--executable-path)))
     (if (not eclimd-prog)
@@ -324,7 +324,8 @@ Also kill the *eclimd*-buffer and remove any hooks added by
   (when eclimd-process
     (when (eclim--connected-p)
       (eclim/execute-command "shutdown")
-      (eclimd--match-process-output "Process eclimd finished"))
+      (eclimd--match-process-output
+       "Process eclimd finished" (called-interactively-p 'any)))
     (delete-process eclimd-process)
     (setq eclimd-process nil))
   (when eclimd-process-buffer
