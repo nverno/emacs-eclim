@@ -196,7 +196,8 @@ corresponding return value as argument."
          (match-data)
          (closure (lambda (proc string _state)
                     (setf output (concat output string))
-                    (setf terminated-p (not (eq 'run (process-status proc))))
+                    (setf terminated-p (not (process-live-p proc)))
+                    ;; (not (eq 'run (process-status proc)))
                     (setf finished-p (or terminated-p
                                          ;; Although Emacs already saves the
                                          ;; match data when calling process
@@ -222,7 +223,7 @@ corresponding return value as argument."
       (unwind-protect
           (progn
             (add-hook 'eclimd--process-event-functions closure)
-            (while (not finished-p)
+            (while (and (process-live-p eclimd-process) (not finished-p))
               (accept-process-output eclimd-process))
             (unless terminated-p output))
         (remove-hook 'eclimd--process-event-functions closure)))))
@@ -324,8 +325,7 @@ Also kill the *eclimd*-buffer and remove any hooks added by
   (when eclimd-process
     (when (eclim--connected-p)
       (eclim/execute-command "shutdown")
-      (eclimd--match-process-output
-       "Process eclimd finished" (called-interactively-p 'any)))
+      (eclimd--match-process-output "Process eclimd finished"))
     (delete-process eclimd-process)
     (setq eclimd-process nil))
   (when eclimd-process-buffer

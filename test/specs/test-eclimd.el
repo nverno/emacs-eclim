@@ -145,8 +145,7 @@ callback"
         (with-timeout (1 (setq marker t))
           (call-interactively 'eclimd-stop))
         (expect marker :not :to-be-truthy)
-        (when (not marker)
-          (expect (buffer-live-p eclimd-process-buffer) :not :to-be-truthy)
-          (expect 'eclimd-stop :not :to-be-in kill-emacs-hook))))))
+        (expect (buffer-live-p eclimd-process-buffer) :not :to-be-truthy)
+        (expect 'eclimd-stop :not :to-be-in kill-emacs-hook)))))
 
 ;;; test-eclimd.el ends here
