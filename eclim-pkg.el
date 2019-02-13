@@ -1,3 +1,4 @@
+;; -*- no-byte-compile: t -*-
 (define-package "eclim" "0.3"
   "An interface to the Eclipse IDE."
   '((dash "2.11.0")

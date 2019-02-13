@@ -2,4 +2,5 @@
 ;;; For more information see (info "(emacs) Directory Variables")
 
 ((emacs-lisp-mode
-  (indent-tabs-mode . nil)))
+  (indent-tabs-mode . nil))
+ ("test" . ((emacs-lisp-mode (no-byte-compile . t)))))
